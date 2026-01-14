@@ -21,28 +21,4 @@ public class TodoList {
     public void remove(int number){
         tasks.remove(number - 1);
     }
-
-    public static void main(String[] args) {
-        
-        TodoList list = new TodoList();
-        list.add("read the course material");
-        list.add("watch the latest fool us");
-        list.add("take it easy");
-
-        list.print();
-        list.remove(2);
-
-        System.out.println();
-        list.print();
-    }
-}
-
-class UserInterface{
-
-    public void start(){
-        
-    }
-    public static void main(String[] args) {
-        
-    }
 }
