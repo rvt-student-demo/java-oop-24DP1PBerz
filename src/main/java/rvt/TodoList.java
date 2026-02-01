@@ -20,7 +20,10 @@ public class TodoList {
         try(BufferedReader br = new BufferedReader(new FileReader("data/todo.csv"))) {
             String line;
             while ((line = br.readLine()) != null) {
-                this.tasks.add(line);
+                String task = line.split(",", 2).length > 1 ? line.split(",", 2)[1] : "";
+                if(checkEventString(task)) {
+                    this.tasks.add(line);
+                }
             }
         } catch (IOException e) {
             System.out.println("Error reading file.");
@@ -31,6 +34,7 @@ public class TodoList {
             return this.tasks.size() - 1;
     }
     public void add(String task){
+        if(!checkEventString(task)) return;
         int nextId = getLastId()+1;
         this.tasks.add(nextId + "," + task);
 
@@ -66,14 +70,30 @@ public class TodoList {
         updateFile();
     }
 
+    public boolean checkEventString(String value){
+
+        String input = "[a-zA-Z0-9 ]+";
+        if(!value.matches(input)){
+            System.out.println("Aktivitāte drīkst saturēt tikai burtus, ciparus un atstarpes.");
+            return false;
+        }
+        if(value.length() < 3){
+            System.out.println("Aktivitātes garums ir mazaks par 3 simboliem.");
+            return false;
+        }
+        return true;
+    }
+
     public static void main(String[] args) {
         TodoList todoList = new TodoList();
-        todoList.add("Buy groceries");
-        todoList.add("wash the dishes");
+        todoList.add("buy groceries");
+        todoList.add("wash the car");
         todoList.print();
         System.out.println("Last ID: " + todoList.getLastId());
         todoList.remove(5);
         System.out.println();
         todoList.print();
+        System.out.println();
+        
     }
 }
