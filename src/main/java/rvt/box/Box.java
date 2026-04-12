@@ -1,26 +1,33 @@
 package rvt.box;
 
-public class Box implements Packable{
-    private double maxWeight;
-    private double combinedWeight;
+import java.util.ArrayList;
 
-    public Box(double maxWeight){
+public class Box implements Packable{
+    private int maxWeight;
+    ArrayList<Packable> packables;
+
+    public Box(int maxWeight){
         this.maxWeight = maxWeight;
-        this.combinedWeight = 0;
+        this.packables = new ArrayList<>();
     }
 
     public double weight() {
-        return this.combinedWeight;
+        double weight = 0;
+        for (Packable packable: packables) {
+            weight += packable.weight();
+        }
+        return weight;
     }
 
-    public void add(Packable packable){
-        if(this.combinedWeight + packable.weight() <= this.maxWeight){
-            this.combinedWeight += packable.weight();
+    public void add(Packable item){
+        double itemweight = item.weight();
+        if(weight() + itemweight <= this.maxWeight){
+            packables.add(item);
         }
     }
 
     public String toString(){
-        return "Box:" + this.combinedWeight + " items, total weight "+ this.combinedWeight + " kg";
+        return "Box:" + packables.size() + " items, total weight "+ weight() + " kg";
     }
 }
 
