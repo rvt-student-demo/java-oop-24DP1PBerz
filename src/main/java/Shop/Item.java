@@ -11,5 +11,14 @@ public class Item {
         this.unitPrice = unitPrice;
     }
 
+    public int price(){
+        return qty * unitPrice;
+    }
+    public void increaseQuantity(){
+        qty += 1;
+    }
 
+    public String toString(){
+        return this.product + ": " + this.qty;
+    }
 }
