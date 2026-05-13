@@ -5,11 +5,17 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.sql.Statement;
 
 public class TodoList {
     private ArrayList<String> tasks;
-    private final String filePath="data/todo.csv";
+    //private final String filePath="data/todo.csv";
 
     public TodoList(){
         this.tasks = new ArrayList<>();
@@ -33,22 +39,44 @@ public class TodoList {
     private int getLastId(){
             return this.tasks.size() - 1;
     }
-    public void add(String task){
-        if(!checkEventString(task)) return;
-        int nextId = getLastId()+1;
-        this.tasks.add(nextId + "," + task);
+    public void add(){
+        try{
+            Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
+            Statement stmt = conn.createStatement();
 
-        try(BufferedWriter bw = new BufferedWriter(new FileWriter("data/todo.csv", true))) {
-            bw.write(nextId + "," + task);
-            bw.newLine();
-        } catch(IOException ioe) {
-            System.out.println(ioe.getMessage());
+            
+            stmt.executeUpdate("INSERT INTO todo(task) VALUES('Make an art painting')");
+        }catch(SQLException e){
+            System.out.println(e.getMessage());
         }
+        // if(!checkEventString(task)) return;
+        // int nextId = getLastId()+1;
+        // this.tasks.add(nextId + "," + task);
+
+        // try(BufferedWriter bw = new BufferedWriter(new FileWriter("data/todo.csv", true))) {
+        //     bw.write(nextId + "," + task);
+        //     bw.newLine();
+        // } catch(IOException ioe) {
+        //     System.out.println(ioe.getMessage());
+        // }
     }
-    public void print(){
-        for(int i = 0; i < tasks.size(); i++){
-        System.out.println(tasks.get(i));
+    public void findAll(){
+        try{
+            Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
+            Statement stmt = conn.createStatement();
+
+            ResultSet rs = stmt.executeQuery("SELECT * FROM todo");
+
+            while(rs.next()){
+                System.out.println(rs.getString("task"));
+            }
+        } catch(SQLException e){
+            System.out.println(e.getMessage());
         }
+       
+        // for(int i = 0; i < tasks.size(); i++){
+        // System.out.println(tasks.get(i));
+        // }
     }
 
     private boolean updateFile(){
@@ -65,9 +93,19 @@ public class TodoList {
         }
 
     }
-    public void remove(int id){
-        this.tasks.remove(id);
-        updateFile();
+    public void deleteOne(int id){
+        try{
+            Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
+            PreparedStatement pstmt = conn.prepareStatement("DELETE FROM todo WHERE id = ?");
+
+            pstmt.setInt(1, id);
+            pstmt.executeUpdate();
+        }catch(SQLException e){
+            System.out.println(e.getMessage());
+        }
+
+        // this.tasks.remove(id);
+        // updateFile();
     }
 
     public boolean checkEventString(String value){
@@ -86,14 +124,11 @@ public class TodoList {
 
     public static void main(String[] args) {
         TodoList todoList = new TodoList();
-        todoList.add("buy groceries");
-        todoList.add("wash the car");
-        todoList.print();
-        System.out.println("Last ID: " + todoList.getLastId());
-        todoList.remove(5);
-        System.out.println();
-        todoList.print();
-        System.out.println();
+        todoList.deleteOne(3);
+        // todoList.add();
+        // todoList.findAll();
+
+
         
     }
 }

@@ -1,26 +1,21 @@
 package rvt;
 
-import java.util.Scanner;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class App {
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        TodoList list = new TodoList();
-        list.add("read the course material");
-        list.add("watch the latest fool us");
-        list.add("take it easy");
-        list.print();
-        list.remove(2);
-        list.print();
-        list.add("buy raisins");
-        list.print();
-        list.remove(1);
-        list.remove(1);
-        list.print();
+        try{
+            Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
+            Statement stmt = conn.createStatement();
 
-        list.remove(1);
-
-        UserInterface user = new UserInterface(list, scanner);
-        user.start();
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS todo (id INTEGER PRIMARY KEY, task TEXT NOT NULL) STRICT");
+            stmt.executeUpdate("INSERT INTO todo(task) VALUES('Make a origami bird')");
+        }catch(SQLException e){
+            System.out.println(e.getMessage());
+        }
+        
     }
 }
