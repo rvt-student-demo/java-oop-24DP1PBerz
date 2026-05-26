@@ -12,7 +12,7 @@ public class TodoDB {
         initSchema();
     }
 
-    private Connection connect() throws SQLException{
+    public Connection connect() throws SQLException{
         return DriverManager.getConnection(DB_URL);
     }
     private void initSchema(){

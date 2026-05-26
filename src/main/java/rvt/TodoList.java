@@ -1,106 +1,112 @@
 package rvt;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+// import java.io.BufferedReader;
+// import java.io.BufferedWriter;
+// import java.io.FileReader;
+// import java.io.FileWriter;
+// import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
+// import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
+// import java.util.ArrayList;
+// import java.util.Scanner;
 import java.sql.Statement;
 
 public class TodoList {
-    private ArrayList<String> tasks;
+    // private ArrayList<String> tasks;
     //private final String filePath="data/todo.csv";
 
-    public TodoList(){
-        this.tasks = new ArrayList<>();
-        loadFromFile();
+    private final TodoDB db;
+
+    public TodoList() {
+        this.db = new TodoDB();
+        createTableIfNeeded();
     }
     
-    private void loadFromFile(){
-        try(BufferedReader br = new BufferedReader(new FileReader("data/todo.csv"))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String task = line.split(",", 2).length > 1 ? line.split(",", 2)[1] : "";
-                if(checkEventString(task)) {
-                    this.tasks.add(line);
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("Error reading file.");
-        }
+    private Connection getConnection() throws SQLException {
+        return db.connect();
     }
 
-    private int getLastId(){
-            return this.tasks.size() - 1;
-    }
-    public void add(){
-        try{
-            Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
-            Statement stmt = conn.createStatement();
-
-            
-            stmt.executeUpdate("INSERT INTO todo(task) VALUES('Make an art painting')");
-        }catch(SQLException e){
+    private void createTableIfNeeded(){
+        String sql = "CREATE TABLE IF NOT EXISTS todo (id INTEGER PRIMARY KEY, task TEXT NOT NULL)";
+        try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(sql);
+        } catch ( Exception e) {
             System.out.println(e.getMessage());
         }
-        // if(!checkEventString(task)) return;
-        // int nextId = getLastId()+1;
-        // this.tasks.add(nextId + "," + task);
-
-        // try(BufferedWriter bw = new BufferedWriter(new FileWriter("data/todo.csv", true))) {
-        //     bw.write(nextId + "," + task);
-        //     bw.newLine();
-        // } catch(IOException ioe) {
-        //     System.out.println(ioe.getMessage());
-        // }
     }
-    public void findAll(){
-        try{
-            Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
-            Statement stmt = conn.createStatement();
 
-            ResultSet rs = stmt.executeQuery("SELECT * FROM todo");
+    // private void loadFromFile(){
+    //     try(BufferedReader br = new BufferedReader(new FileReader("data/todo.csv"))) {
+    //         String line;
+    //         while ((line = br.readLine()) != null) {
+    //             String task = line.split(",", 2).length > 1 ? line.split(",", 2)[1] : "";
+    //             if(checkEventString(task)) {
+    //                 this.tasks.add(line);
+    //             }
+    //         }
+    //     } catch (IOException e) {
+    //         System.out.println("Error reading file.");
+    //     }
+    // }
 
-            while(rs.next()){
-                System.out.println(rs.getString("task"));
-            }
+    // private int getLastId(){
+    //         return this.tasks.size() - 1;
+    // }
+
+    public void add(String task){
+        if(!checkEventString(task)) {
+            return;
+        }
+
+        String sql = "INSERT INTO todo(task) VALUES(?)";
+        try (Connection conn = db.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, task);
+            pstmt.executeUpdate();
+            System.out.println("Task added: " + task);
         } catch(SQLException e){
             System.out.println(e.getMessage());
         }
-       
-        // for(int i = 0; i < tasks.size(); i++){
-        // System.out.println(tasks.get(i));
-        // }
     }
 
-    private boolean updateFile(){
-        try(BufferedWriter bw = new BufferedWriter(new FileWriter("data/todo.csv"))) {
-            for(int i = 0; i < tasks.size();i++){
-            bw.write(tasks.get(i).toString());
-            bw.newLine();
-            
+    public void findAll(){
+        String sql = "SELECT id, task FROM todo ORDER BY id";
+        try (Connection conn = db.connect(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+            while(rs.next()){
+                System.out.println(rs.getInt("id") + ": " + rs.getString("task"));
             }
-            return true;
-        } catch(IOException e) {
+        } catch(SQLException e){  
             System.out.println(e.getMessage());
-            return false;
         }
-
     }
-    public void deleteOne(int id){
-        try{
-            Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
-            PreparedStatement pstmt = conn.prepareStatement("DELETE FROM todo WHERE id = ?");
 
+    // private boolean updateFile(){
+    //     try(BufferedWriter bw = new BufferedWriter(new FileWriter("data/todo.csv"))) {
+    //         for(int i = 0; i < tasks.size();i++){
+    //         bw.write(tasks.get(i).toString());
+    //         bw.newLine();
+            
+    //         }
+    //         return true;
+    //     } catch(IOException e) {
+    //         System.out.println(e.getMessage());
+    //         return false;
+    //     }
+
+    // }
+    public void deleteOne(int id){
+        String sql = "DELETE FROM todo WHERE id = ?";
+        try (Connection conn = db.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
-            pstmt.executeUpdate();
-        }catch(SQLException e){
+            int deletedRows = pstmt.executeUpdate();
+            if (deletedRows > 0) {
+                System.out.println("Task deleted.");
+            } else {
+                System.out.println("No task found with id: " + id);
+            }
+        } catch(SQLException e){
             System.out.println(e.getMessage());
         }
 
@@ -117,18 +123,20 @@ public class TodoList {
         }
         if(value.length() < 3){
             System.out.println("Aktivitātes garums ir mazaks par 3 simboliem.");
-            return false;
+            return false; 
         }
         return true;
     }
 
-    public static void main(String[] args) {
-        TodoList todoList = new TodoList();
-        todoList.deleteOne(3);
-        // todoList.add();
-        // todoList.findAll();
-
+    // public static void main(String[] args) {
+    //     TodoList todoList = new TodoList();
+        
+         
+    //     todoList.add("cookk");
+    //     todoList.findAll();
+    //     todoList.deleteOne(1);
+    //     todoList.findAll();
 
         
-    }
+    // }
 }
