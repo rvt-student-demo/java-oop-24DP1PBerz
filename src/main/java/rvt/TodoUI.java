@@ -1,15 +1,18 @@
 package rvt;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
-
+import java.awt.FlowLayout;
 
 //import java.util.Scanner;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JButton;
 
 public class TodoUI {
     private JFrame window;
     private JPanel panel;
+    private JButton button;
 
     public TodoUI(){
         initialize();
@@ -22,9 +25,15 @@ public class TodoUI {
         window.setLocationRelativeTo(null);
         window.setResizable(false);
 
-        panel = new JPanel();
-        panel.setBackground(Color.CYAN);
+        panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        panel.setBackground(new Color(69, 4, 4));
         window.add(panel);
+
+        window.add(panel, BorderLayout.SOUTH);
+
+        button = createbutton("Add Task", "Add a new task into the list");
+        panel.add(button);
+
     }
 
 
@@ -32,6 +41,11 @@ public class TodoUI {
         window.setVisible(true);
     }
 
+    private JButton createbutton(String X, String Y){
+        JButton button = new JButton(X);
+        button.setToolTipText(Y);
+        return button;
+    }
     // TodoList todo;
     // Scanner scanner;
 
